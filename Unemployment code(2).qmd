@@ -27,7 +27,7 @@ library(ggplot2)
 
 ```{r}
 #| include: false
-unemployment = read.csv("Data/Data/all-ages.csv")
+unemployment = read.csv(file.path("Data","Data", "all-ages.csv"))
 ```
 
 ```{r}
