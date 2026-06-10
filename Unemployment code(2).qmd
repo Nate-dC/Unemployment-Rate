@@ -1,0 +1,133 @@
+---
+title: "Unemployment Rate amongst College Majors"
+author: "Group 12"
+format: html
+editor: visual
+---
+
+# Introduction
+
+## Background of the Study
+
+A college degree has been regarded as one of the most reliable pathways to career stability and upward mobility. That argument still holds true in many respects, but the employment landscape is shifting. Rising tuition costs, an increasingly competitive labor market, and the growing influence of automation and digitization have made the choice of college a more controversial decision than it once was.
+
+One narrative that surfaces repeatedly in academic literature, policy discussions, and everyday career advice is that Science, Technology, Electronics, and Mathematics (STEM) graduates enjoy stronger employment outcomes. The argument is straightforward: technical skills map more directly onto high-demand industries, which theoretically buffers STEM graduates against unemployment during economic downturns. Non-STEM fields, by contrast, are often viewed skeptically in terms of immediate employability. Whether that perception holds up is another matter. Widespread assumptions deserve empirical testing, and the labor market is rarely as tidy as a single narrative suggests.
+
+```{r}
+#| warning: false
+#| include: false
+library(tidyverse)
+library(stringr)
+library(janitor)
+library(tidyr)
+library(skimr)
+library(readxl)
+library(ggplot2)
+```
+
+```{r}
+#| include: false
+unemployment = read.csv("archive1/all-ages.csv")
+```
+
+```{r}
+#| include: false
+unemployment = clean_names(unemployment)
+unemployment = unemployment %>% 
+  filter(!is.na(total))
+```
+
+## Problem Statement
+
+The practical problem is that many important decisions, likw how universities allocate departmental resources, how students weigh their options, how policymakers shape education funding, are made without sufficiently granular data. Aggregate employment figures can obscure meaningful differences between fields. This study aims to address that gap through a structured statistical comparison of unemployment rates across 173 distinct major categories, examining whether the assumed STEM advantage is borne out in the data.
+
+## Research Question
+
+This report is organized around the following central research question:
+
+-   "Do graduates from STEM major categories experience significantly lower unemployment rates compared to non-STEM graduates?"
+
+For this study, STEM is defined to include: Engineering, Computer & Mathematics, Biology & Life Science, Physical Sciences, Agriculture & Natural Resources, Education and Health. All remaining disciplines are classified as non-STEM.
+
+## Categorizing Majors into STEM/Non-STEM
+
+```{r}
+#| echo: false
+stem_categories = c(
+  "Engineering", 
+  "Computers & Mathematics", 
+  "Biology & Life Science", 
+  "Physical Sciences",
+  "Agriculture & Natural Resources",
+  "Education",
+  "Health"
+)
+# Create the new column of STEM and Non-STEM
+unemployment = unemployment %>%
+  mutate(major_type = ifelse(major_category %in% stem_categories, "STEM", "Non-STEM"))
+
+table(unemployment$major_type)
+```
+
+```{r}
+#| include: false
+unemployment_clean = unemployment %>%
+  select(major_category, total, employed, unemployed, unemployment_rate, major_type)
+
+str(unemployment_clean)
+```
+
+## Hypotheses
+
+The following hypotheses have been established to guide the statistical analysis:
+
+-   **Null Hypothesis (H0):** There is no significant difference in the mean unemployment rate between STEM and non-STEM graduates.
+
+-   **Alternative Hypothesis (H1):** STEM graduates have a significantly lower mean unemployment rate compared to non-STEM graduates.
+
+## Conduct T-test
+
+```{r}
+#| include: false
+t.test(unemployment_rate ~ major_type, data = unemployment_clean, alternative = "greater")
+```
+
+**Mean Unemployment rate:**
+
+Non-STEM = 6.83%, STEM = 4.98%
+
+p-value = 2.558e-11 \< 0.05
+
+Conclusion: We have strong evidence to suggest that STEM graduates have a significantly lower unemployment rate than Non-STEM graduates.
+
+## Bar chart for Unemployment Rate in each Major Category
+
+```{r}
+#| echo: false
+# Calculate the mean unemployment rate for each major category
+# We also include the major_type to keep the grouping information
+category_summary = unemployment_clean %>%
+  group_by(major_category, major_type) %>%
+  summarize(mean_rate = mean(unemployment_rate), .groups = 'drop')
+
+# Create the bar chart
+ggplot(category_summary, aes(x = reorder(major_category, mean_rate), 
+                             y = mean_rate, 
+                             fill = major_type)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  # Flips the chart so labels are easier to read
+  labs(title = "Mean Unemployment Rate by Major Category",
+       x = "Major Category",
+       y = "Mean Unemployment Rate",
+       fill = "Type") +
+  scale_fill_manual(values = c("STEM" = "steelblue", "Non-STEM" = "salmon")) +
+  theme_minimal()
+```
+
+The chart represents a clear distinction in unemployment rates when considering STEM and non STEM college majors, where non STEM college majors show a vast increment in average unemployment
+
+# Conclusion
+
+Many students choose their college majors depending on whether or not it will help them achieve upward mobility. This study compared distinct college majors in STEM and Non-STEM fields. As our statistical analysis demonstrates, this theoretical advantage translates into tangible labor market outcomes. By definitively rejecting the null hypothesis, we confirm that graduates with STEM degrees experience a significantly lower average unemployment rate (4.98%) compared to their non-STEM counterparts (6.83%).
+
+Ultimately, while this study confirms a clear statistical advantage for STEM graduates in securing employment, the choice of a college major remains a complex decision. Students and advisors must continue to balance these empirical employment trends with individual aptitudes, and institutions must recognize that a resilient economy relies on the diverse contributions of both STEM and non-STEM disciplines alike.
